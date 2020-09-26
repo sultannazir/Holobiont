@@ -14,7 +14,7 @@ Original codes sourced from 'The role of multilevel selection in host microbiome
 ## Files
 
 <ul>
-  <li> Results from changed model seen in Hgene01.png (helper frequency distribution) and Hgene01h.png (host gene distribution). </li>
+  <li> Results from changed model seen in Hgene01.png (helper frequency distribution) and Hgeneh01.png (host gene distribution). </li>
   <li>Changes made to MLS_figure_3.py and MLS_static_fast.py.</li>
   <li>singleRunMLS.py to see details of each point simulation. Example figures HMselxx.png - 4 figures simulating each corner point of the modified fig 3. Green line in first graph of those figures represent the Hg frequency.</li>
 </ul>
