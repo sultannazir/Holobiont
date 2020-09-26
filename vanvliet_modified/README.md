@@ -1,8 +1,8 @@
-#Multilevel selection model incorporating Host control#
+# Multilevel selection model incorporating Host control
 
 Original codes sourced from 'The role of multilevel selection in host microbiome evolution' by van Vliet and Doebeli (2019)
 
-##Modifications##
+## Modifications
 
 <ul>
   <li>Addition of one host gene (Hg) per holobiont</li>
@@ -11,7 +11,7 @@ Original codes sourced from 'The role of multilevel selection in host microbiome
   <li>Model run with same parameters as Fig 3 of the original paper.</li>
 <?ul>
 
-##Files##
+## Files
 
 <ul>
   <li> Results from changed model seen in Hgene01.png (helper frequency distribution) and Hgene01h.png (host gene distribution). </li>
@@ -19,6 +19,6 @@ Original codes sourced from 'The role of multilevel selection in host microbiome
   <li>singleRunMLS.py to see details of each point simulation. Example figures HMselxx.png - 4 figures simulating each corner point of the modified fig 3. Green line in first graph of those figures represent the Hg frequency.</li>
 </ul>
 
-##Other modifications##
+## Other modifications
 
 20 points per axis instead of 30 to reduce computation time.
