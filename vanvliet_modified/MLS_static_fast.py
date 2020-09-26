@@ -42,15 +42,17 @@ def init_comm(model_par):
                        model_par["N0init"] * model_par["F0"])
         dAct = np.full(numGroup,
                        model_par["N0init"] * (1 - model_par["F0"]))
-        micx = model_par["F0"]
-        micy = 1 - model_par["F0"]
 
+        # independant microbe dynamics
+        micx = model_par["F0"]                                 ####introduce helpers in independant population (control microbe population with no group level event)
+        micy = 1 - model_par["F0"]                             ####corresponding neutrals in the independant population
+
+    ####initial host genotypes
     if numGroup%2 == 0:
-        Hgene = np.tile([0,1],int(numGroup/2))
+        Hgene = np.tile([0,1],int(numGroup/2))                 ####if even num of hosts, alternatively add 0 and 1 forms of host gene
     else:
-        Hgene = np.tile([0,1],int((numGroup+1)/2))
+        Hgene = np.tile([0,1],int((numGroup+1)/2))             ####alternatively add 0 and 1 genes to odd number of hosts
         del Hgene[-1]
-    #indept microbe dynamics
 
     # store in C-byte order
     cAct = np.copy(cAct, order='C')
@@ -72,8 +74,8 @@ def init_output_matrix(Num_t_sample):
                       ('H_mstd', 'f8'),
                       ('rms_err', 'f8'),
                       ('time', 'f8'),
-                      ('mic_dyn', 'f8'),
-                      ('Hgene_freq','f8')])
+                      ('mic_dyn', 'f8'),                       ####helper frequency in independant microbe population
+                      ('Hgene_freq','f8')])                    ####add host gene frequency in output data
 
     Output = np.full(Num_t_sample, np.nan, dType)
     Output['time'][0] = 0
@@ -217,8 +219,8 @@ def update_host(CVec, DVec, AgeVec, cumulPropVec, numSubStep, n0, sigma, rndMat,
                 dOff = n0 * (1 - fracOff)
                 cNewTemp[numNewBorn] = cOff
                 dNewTemp[numNewBorn] = dOff
-                genePar = Hgene[id_group]
-                geneOff = genePar             #no variation in host gene inheritance
+                genePar = Hgene[id_group]                      ####Hg of parent of newborn
+                geneOff = genePar                              ####same Hg inherited by offspring
                 HgeneTemp[numNewBorn] = geneOff
                 numNewBorn += 1
             elif deathEvent and hostAlive:
@@ -247,14 +249,15 @@ def update_comm(c, d, cost, mu, mig, dt, micx, micy, Hg):
     nGroup = c.size
     fh = 1 / (nGroup - 1) #fraction of migrants per host
     n = c + d #tot pop size
-    cost = cost*(1-Hg)
-    #print(micx)
+    cost = cost*(1-Hg)                                         ####Manifestation of Hg. 0 cost if Hg present
+
+    #Independant microbe dynamics (silenced for now - not required for our figure)
     #micx0 = micx
     #micy0 = micy
     #micn = micx0 + micy0
     #micx += dt * (micx0 * ((1 - mu) * (1 - cost) - micn)+ mu * micy0)
     #micy += dt * (micy0 * ((1 - mu) - micn)+ mu * (1 - cost) * micx0)
-    #print(micx)
+
     if nGroup > 1:
         # calc derivatives
         c += dt * (

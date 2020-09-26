@@ -34,8 +34,8 @@ override_data = False
 # set folder
 data_folder = Path("Data_Paper/")
 fig_Folder = Path("Figures_Paper/")
-figureName = 'figure3f01onlyh.pdf'
-dataName = 'data_Figure3f01onlyh.npz'
+figureName = 'figure3wHg.pdf'
+dataName = 'data_Figure3wHg.npz'
 
 # set model parameters
 tau_H = 1000
@@ -46,7 +46,7 @@ sigma_vec = [0.02, 0.1]
 
 model_par = {
     # selection strength settings
-    "s": 1,
+    "s": 1,                                  ####can change magnitude of symbiont selection
     "K_H": 500.,
     "D_H": 0.,
     # tau_var settings
@@ -235,7 +235,7 @@ def select_data(data1D, BHidx, sigmaidx):
 
     transMode = data1D['n0']/data1D['mig']
     y = np.log10(transMode[currSubset])
-    z = data1D['Hgene_freq'][currSubset]
+    z = data1D['F_mav'][currSubset]               #### z axis: 'Hg_freq' - host gene frequency, or 'F_mav' for helper frequency
     return (x, y, z)
 
 
