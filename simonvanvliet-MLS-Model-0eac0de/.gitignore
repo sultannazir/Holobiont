@@ -1,0 +1,12 @@
+#ignore folders
+Data/
+Data_Paper/
+Figures/
+Figures_Paper/
+profile/
+__pycache__/
+.vscode/
+.spyproject/
+
+*.ipynb
+
