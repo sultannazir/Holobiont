@@ -20,14 +20,14 @@ model_par = {
     # Host carying capacity
     "K_H": 500.,
     # Host birth rate = 1/TAU_H * (1 + B_H * Helper density)
-    "B_H": 1.,
+    "B_H": 0.,
     # Host death rate = (1/TAU_H) * (#Host/K_H) * (1 - D_H * Helper density)
     "D_H": 0.,
     # Number of microbe generations per host generation
     "TAU_H": 1000,
     # %% Microbiome Parameters
     # Helper birth rate = (1-cost)
-    "cost": 0.00001,
+    "cost": 0.01,
     # %% Vertical Transmission Paramaters
     # Sampling variation (STD of normal distribution)
     "sigmaBirth": 0.02,
@@ -35,7 +35,7 @@ model_par = {
     "n0": 1E-4,
     # %% Horizontal Transmission Paramaters
     # Migration rate between hosts
-    "mig": 1E-2,
+    "mig": 1E-6,
     # %% initial conditions
     #Fraction helper cells at t=0
     "F0": 0.5,

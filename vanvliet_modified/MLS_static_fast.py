@@ -249,7 +249,7 @@ def update_comm(c, d, cost, mu, mig, dt, micx, micy, Hg):
     nGroup = c.size
     fh = 1 / (nGroup - 1) #fraction of migrants per host
     n = c + d #tot pop size
-    cost = cost*(1-Hg)                                         ####Manifestation of Hg. 0 cost if Hg present
+    cost = cost * (1-Hg)                                      ####Manifestation of Hg. 0 cost if Hg present
 
     #Independant microbe dynamics (silenced for now - not required for our figure)
     #micx0 = micx

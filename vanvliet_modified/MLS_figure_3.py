@@ -34,8 +34,8 @@ override_data = False
 # set folder
 data_folder = Path("Data_Paper/")
 fig_Folder = Path("Figures_Paper/")
-figureName = 'figure3wHg.pdf'
-dataName = 'data_Figure3wHg.npz'
+figureName = 'figure3HgOB.pdf'
+dataName = 'data_Figure3HgOB.npz'
 
 # set model parameters
 tau_H = 1000
@@ -229,13 +229,14 @@ def select_data(data1D, BHidx, sigmaidx):
     isFinite = np.logical_and.reduce(
         np.isfinite((data1D['tauVar_rel'], data1D['tauHer_rel'],
                      data1D['F_mav'], curSigma, curBH)))
-    currSubset = np.logical_and.reduce((curSigma, curBH, isFinite))
+    currSubset = np.logical_and.reduce((curSigma, isFinite))
     # extract data and log transform x,y
     x = np.log10(data1D['tauVar_rel'][currSubset])
 
     transMode = data1D['n0']/data1D['mig']
     y = np.log10(transMode[currSubset])
-    z = data1D['F_mav'][currSubset]               #### z axis: 'Hg_freq' - host gene frequency, or 'F_mav' for helper frequency
+    z = data1D['Hgene_freq'][currSubset]               #### z axis: 'Hg_freq' - host gene frequency, or 'F_mav' for helper frequency
+    print(curSigma)
     return (x, y, z)
 
 
@@ -297,6 +298,7 @@ def bin_2Ddata(currXData, currYData, currZData, xbins, ybins):
             zInBin = currZData[inBin]
             # calc mean over bine
             binnedData[yy, xx] = np.nanmean(zInBin)
+
     return(binnedData)
 
 

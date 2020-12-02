@@ -12,6 +12,7 @@ vanvliet@zoology.ubc.ca
 """
 # %% single run of model
 import MLS_static_fast as mlssf
+import matplotlib.pyplot as plt
 
 # SET model settings
 model_par = {
@@ -23,21 +24,21 @@ model_par = {
     # Host death rate = (1/TAU_H) * (#Host/K_H) * (1 - D_H * Helper density)
     "D_H": 0.,
     # Number of microbe generations per host generation
-    "TAU_H": 10,        
+    "TAU_H": 1000,
     # %% Microbiome Parameters
     # Helper birth rate = (1-cost)
-    "cost": 0.01,       
+    "cost": 0.001,
     # %% Vertical Transmission Paramaters
     # Sampling variation (STD of normal distribution)
-    "sigmaBirth": 0.05,  
+    "sigmaBirth": 0.02,
     # Density of vertically transmitted inoculum (k=1)
-    "n0": 1E-3,  
+    "n0": 1E-4,
     # %% Horizontal Transmission Paramaters
     # Migration rate between hosts
-    "mig": 1E-5,
+    "mig": 1E-4,
     # %% initial conditions
     #Fraction helper cells at t=0
-    "F0": 0.5, 
+    "F0": 'uniform',
     #Density of microbes at t=0 (<=1)
     "N0init": 1.,
     #Number of hosts t=0 (use -1 to set to K_H)
@@ -69,3 +70,4 @@ model_par = {
 
 Output, InvestmentPerHost = mlssf.single_run_with_plot(model_par)
 
+plt.show()
