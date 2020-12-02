@@ -13,12 +13,14 @@ Parameters =   {"Num_mic"   :10, # number of microbes
                 "Horiz_T"   :0, # Rate of colonization
                 "Env_update":0, # Rate of update of Environment microbe pool by host
                 "T"         :1000, # Lngth of simulation
+                "Intraspecific interaction": "Yes" # Enter "Yes" or "No"
                 }
 
 # Microbes
-Microbes = np.array([[0,0,0,-1,-1,-1],  # Manually input microbe trait characteristics here
-                    [1,0,-1,1,0,-1],
-                    [0,0,0,0,0,0]])
+# Manually input microbe trait characteristics here - will be used if simulation sun for given microbes
+Microbes = np.array([[0,0,0,-1,-1,-1], # effect on own fitness
+                    [1,0,-1,1,0,-1],   # effect on fitness of other microbes
+                    [0,0,0,0,0,0]])    # effect on host fitness
 
 # Host
 Host = [0,0]   # Host trait
@@ -37,6 +39,8 @@ def run_scheme1_signlehost(Parameters, Microbes, Host, init_A):
     r_M = Parameters["r_M"]
     K_M = Parameters["K_M"]
 
+    intrasp = Parameters["Intraspecific interaction"]
+
     E_HM = Host[0]
     #E_HH = Host[1]
 
@@ -52,7 +56,13 @@ def run_scheme1_signlehost(Parameters, Microbes, Host, init_A):
     Output = []     # time series of microbe abundances
 
     for t in range(time_steps):
-        EV = 1 + (r_M + E_M + E_HM + sum(A * E_MM) - A*E_MM)
+        if intrasp == "Yes":
+            EV = 1 + (r_M + E_M + E_HM + sum(A * E_MM))
+        elif intrasp == "No":
+            EV = 1 + (r_M + E_M + E_HM + sum(A * E_MM) - A * E_MM)
+        else:
+            print("Please specify presence of intraspecific interaction in Parameters")
+            break
         A = A * EV            # Microbe growth
         A = A * K_M / sum(A)  # normalize to get abundances
 
@@ -61,7 +71,7 @@ def run_scheme1_signlehost(Parameters, Microbes, Host, init_A):
         #Env = Env + Env_upd * A
         #Env = Env / sum(Env)
 
-        Output.append(A)        # Make changes here depending on what is being tracked
+        Output.append(A)
 
     return (Output)
 
