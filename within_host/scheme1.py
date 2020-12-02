@@ -35,20 +35,20 @@ def run_scheme1_signlehost(Parameters, Microbes, Host, init_A):
 
     E_M = Microbes[0]
     E_MM = Microbes[1]
-    #E_MH = Microbes[2]
+    E_MH = Microbes[2]
     r_M = Parameters["r_M"]
     K_M = Parameters["K_M"]
 
     intrasp = Parameters["Intraspecific interaction"]
 
     E_HM = Host[0]
-    #E_HH = Host[1]
+    E_HH = Host[1]
 
     # Environment pool
-    #Env = np.full(N, K_M / N)
+    Env = np.full(N, K_M / N)   # initialize environment pool abundances
 
-    #HT = Parameters["Horiz_T"]
-    #Env_upd = Parameters["Env_update"]
+    HT = Parameters["Horiz_T"]
+    Env_upd = Parameters["Env_update"]
 
     time_steps = Parameters["T"]
     A = init_A
@@ -63,13 +63,13 @@ def run_scheme1_signlehost(Parameters, Microbes, Host, init_A):
         else:
             print("Please specify presence of intraspecific interaction in Parameters")
             break
-        A = A * EV            # Microbe growth
+        A = A * EV + HT*Env   # Microbe growth and colonization
         A = A * K_M / sum(A)  # normalize to get abundances
 
-        #phi = A * E_MH + E_HH
+        R_H = A * E_MH + E_HH   # host fitness
 
-        #Env = Env + Env_upd * A
-        #Env = Env / sum(Env)
+        Env = Env + Env_upd * A    # environment pool update
+        Env = Env / sum(Env)
 
         Output.append(A)
 
