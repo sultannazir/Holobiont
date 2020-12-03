@@ -123,10 +123,10 @@ fig, axes = plt.subplots(nrows=1,ncols=2)
 
 sns.stripplot(data = stat.T, ax=axes[0])
 axes[0].set_xlabel("Microbe")
-axes[0].set_ylabel("Microbe abundance at t=1000")
+axes[0].set_ylabel("Microbe abundance at t={}".format(Parameters["T"]))
 sns.scatterplot(data=np.mean(stat.T, axis=0), ax=axes[1])
 axes[1].set_xlabel("Microbe")
-axes[1].set_ylabel("Mean microbe abundance at t=1000")
+axes[1].set_ylabel("Mean microbe abundance at t={}".format(Parameters["T"]))
 fig.tight_layout()
 
 plt.show()
