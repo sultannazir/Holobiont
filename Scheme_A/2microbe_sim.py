@@ -3,31 +3,25 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-Parameters = {'Num_mic'     :2,     # number of microbes
-              'Num_host'    :500,   # number of hosts
-              'death_rate'  :0.001, # host event rate
-              'host_weight' :0.5,     # host weightage in calculating fitness (1 - microbe weightage)
-              'mutation'    :0.01, # variation rate in host reproduction
-              'mic_intR'    :1,     # microbe intrinsic fitness
-              'mic_capacity':1000,   # microbe carrying capacity
-              'col_rate'    :0.1,   # colonization rate
-              'Env_update'  :1,   # host influence on environment microbe abundance
-              'sim_time'    :1000,  # number of time steps
-              'num_bins'    :20     # number of bins to generate histogram of distributions
-              }
+Parameters = dict(Num_mic=2, Num_host=500, death_rate=1, host_weight=0, mutation=0, seed=1, mic_intR=1,
+                  mic_capacity=1000, col_rate=0.1, Env_update=0, sim_time=500000, num_bins=20)
 
 K = Parameters['mic_capacity']
 bins = Parameters['num_bins']
+N = 2
+M = Parameters['Num_host']
 
-
-# Define interaction matrix for the 2 microbe system
+# Initialize
 I = np.array([[0,0,0],[0,-1,1]])
+A = np.ones((M,N))
+RH = np.zeros((M,N+1))
+T = np.ones((M,N))
+Env = np.full(N,1/N)
 
+AB,T,RH = gf.run_schemeA_giveninit(I, RH, T, A, Env, Parameters)
 
-AB,T,RH = gf.run_schemeA_givenI(I, Parameters)
-
-ABA = pd.DataFrame(np.array(AB[0]), columns=list(str(i) for i in np.flip(np.linspace(0,K,bins-1)).round(0)))
-ABB = pd.DataFrame(np.array(AB[1]), columns=list(str(i) for i in np.flip(np.linspace(0,K,bins-1)).round(0)))
+ABA = pd.DataFrame(np.array(AB[0]), columns=list(str(i) for i in np.flip(np.linspace(0,1,bins-1)).round(1)))
+ABB = pd.DataFrame(np.array(AB[1]), columns=list(str(i) for i in np.flip(np.linspace(0,1,bins-1)).round(1)))
 TA = pd.DataFrame(np.array(T[0]), columns=list(str(i) for i in np.flip(np.linspace(0, 1, bins - 1)).round(1)))
 TB = pd.DataFrame(np.array(T[1]), columns=list(str(i) for i in np.flip(np.linspace(0, 1, bins - 1)).round(1)))
 RHA = pd.DataFrame(np.array(RH[0]), columns=list(str(i) for i in np.flip(np.linspace(-1, 1, bins - 1)).round(1)))
@@ -35,17 +29,16 @@ RHB = pd.DataFrame(np.array(RH[1]), columns=list(str(i) for i in np.flip(np.lins
 
 plt.subplot(3,2,1)
 plt.imshow(ABA.T, cmap="Spectral", aspect='auto')
-plt.yticks(np.arange(0,bins,bins/4), np.flip(np.arange(K/4,K*(1.25),K/4)))
+plt.yticks(np.arange(0,bins,bins/4), np.flip(np.arange(0.25,1.25,0.25)))
 plt.xlabel("Time")
-plt.ylabel("Microbe A \n abundance per host")
+plt.ylabel("Neutral microbe \n abundance per host")
 plt.colorbar()
-
 
 plt.subplot(3,2,2)
 plt.imshow(ABB.T, cmap="Spectral", aspect='auto')
-plt.yticks(np.arange(0,bins,bins/4), np.flip(np.arange(K/4,K*(1.25),K/4)))
+plt.yticks(np.arange(0,bins,bins/4), np.flip(np.arange(0.25,1.25,0.25)))
 plt.xlabel("Time")
-plt.ylabel("Microbe B \n abundance per host")
+plt.ylabel("Altruist microbe \n abundance per host")
 plt.colorbar()
 
 plt.subplot(3,2,3)

@@ -24,9 +24,9 @@ def find_R(I, A, RH, rM, s):
     RM = np.matmul(A0,I)  # net microbe effect on fitness as per unit fitness effect (I) multiplied by abundance (A)
     R = rM + s*RH + (1-s)*RM  # net fitness as sum of host effect and microbe effect to intrinsic fitness
     # extract and normalize microbe fitnesses in each host
-    micR = R[:,:-1]/np.sum(R[:,:-1],axis=1)[:,np.newaxis]
+    micR = R[:,:-1]/np.clip(np.sum(R[:,:-1],axis=1)[:,np.newaxis], a_min=0.0001, a_max=None)
     # extract and normalize host fitesses
-    hostR = R[:,-1]/np.sum(R[:,-1])
+    hostR = R[:,-1]/np.clip(np.sum(R[:,-1]), a_min=0.0001, a_max=None)
     return(micR, hostR)
 
 def update_microbes(A, micR, Env, c, K):
@@ -41,6 +41,7 @@ def update_microbes(A, micR, Env, c, K):
 
     PA = np.multiply(P1, 1-P2-P3)
     PB = PA + np.multiply(1 - P1, P2+P3)
+
     Probs = np.random.rand(A.shape[0],A.shape[1])
 
     Aadd = np.zeros(A.shape)
@@ -68,30 +69,33 @@ def stepfunc(x):
     x = np.ceil(np.clip(x,a_min=0, a_max=1))
     return(x)
 
-def update_host(A, R, RH, T, mu, d):
+def update_host(A, R, RH, T, mu, d, seed):
     rand = np.random.rand()
     IDhost = np.arange(len(R)) # index hosts from 0 to M-1
 
     if rand<=d:
-        cumvec = R.cumsum() # cumulative fitness to get growth propensity vector
+        Bcumvec = R.cumsum() # cumulative fitness to get growth propensity vector
+        Dcumvec = (1-R).cumsum() # cumulative 1-fitness for death propensity vector
         randnum = np.random.rand()
-        IDbirth = IDhost[(cumvec > randnum)][0] # choose index of host selected to reproduce
-
-        IDdeath = np.random.choice(IDhost) # choose index of host which dies
+        IDbirth = IDhost[(Bcumvec > randnum)][0] # choose index of host selected to reproduce
+        IDdeath = IDhost[(Dcumvec > randnum*Dcumvec[-1])][0]
+        #IDdeath = np.random.choice(IDhost) # choose index of host which dies
 
         # update offspring host control values
-        RH[IDdeath] = np.clip(RH[IDbirth] + np.random.normal(0, mu, len(RH[0])), a_min=-1, a_max=1)
+        RH[IDdeath] = np.clip(RH[IDbirth] + np.random.normal(0, 0, len(RH[0])), a_min=-1, a_max=1)
         # update offspring host-controlled transmission values
-        T[IDdeath] = np.clip(T[IDbirth] + np.random.normal(0, mu, len(RH[0])-1), a_min=-1, a_max=1)
+        T[IDdeath] = np.clip(T[IDbirth] + np.random.normal(0, 0, len(RH[0])-1), a_min=-1, a_max=1)
 
         # initalize offspring microbiome
         randtrans = np.random.rand(len(A[0]))
+
+        A0 = calc_rowwise_norm(A)
         for i in range(len(A[0])):
-            if T[IDbirth][i]*stepfunc(A[IDbirth][i])<randtrans[i]:
+            if T[IDbirth][i]*A0[IDbirth][i]>randtrans[i]:
                 # random number says true for transmission
                 # multiply with step func to check presence of microbe in the parent
                 # If both satisfied, seed microbe in the offspring
-                A[IDdeath][i] = 1
+                A[IDdeath][i] = seed
             else:
                 A[IDdeath][i] = 0
 
@@ -110,6 +114,7 @@ def run_schemeA_giveninit(I, RH, T, A, Env, Parameters):
     K = Parameters['mic_capacity']
 
     c = Parameters['col_rate']
+    seed = Parameters['seed']
     EU = Parameters['Env_update']
 
     TT = Parameters['sim_time']
@@ -124,10 +129,10 @@ def run_schemeA_giveninit(I, RH, T, A, Env, Parameters):
         Host_control.append([])
 
     for t in range(TT):
-
+        A0 = calc_rowwise_norm(A)
         for i in range(len(I)):
             # Give distribution of abundance values of each microbe at time t
-            Abundances[i].append(np.flip(np.histogram(A[:, i], bins=np.linspace(0, K, bins))[0]))
+            Abundances[i].append(np.flip(np.histogram(A0[:, i], bins=np.linspace(0, 1, bins))[0]))
             # Give distribution of transmission values on each microbe at time t
             Transmissions[i].append(np.flip(np.histogram(T[:, i], bins=np.linspace(0, 1, bins))[0]))
             # Give distribution of host control values on each microbe at time t
@@ -136,8 +141,7 @@ def run_schemeA_giveninit(I, RH, T, A, Env, Parameters):
         Env = update_env(Env, A, EU)
         micR, hostR = find_R(I, A, RH, r, s)
         A = update_microbes(A, micR, Env, c, K)
-        A, RH, T = update_host(A, hostR, RH, T, mu, d)
-
+        A, RH, T = update_host(A, hostR, RH, T, mu, d, seed)
         print(t)
 
     return (Abundances, Transmissions, Host_control)
@@ -185,3 +189,95 @@ def run_schemeA_singlehost(I, RH, A, Env, Parameters):
 
     Abundance.append(A[0])
     return(Abundance)
+
+def run_schemeA_frac_singlehost(I, RH, A, Env, Parameters):
+    s = Parameters['host_weight']
+
+    r = Parameters['mic_intR']
+    K = Parameters['mic_capacity']
+
+    c = Parameters['col_rate']
+
+    TT = Parameters['sim_time']
+
+    Abundance = []
+
+    for t in range(TT):
+        A0 = calc_rowwise_norm(A)
+        Abundance.append(A0[0])
+        micR, hostR = find_R(I, A, RH, r, s)
+        A = update_microbes(A, micR, Env, c, K)
+
+    return(Abundance)
+
+def run_schemeA_giveninit_getmean(I, RH, T, A, Env, Parameters):
+    d = Parameters['death_rate']
+    s = Parameters['host_weight']
+    mu = Parameters['mutation']
+
+    r = Parameters['mic_intR']
+    K = Parameters['mic_capacity']
+
+    c = Parameters['col_rate']
+    seed = Parameters['seed']
+    EU = Parameters['Env_update']
+
+    TT = Parameters['sim_time']
+
+    Abundances = []
+    Trans = []
+    for i in range(len(I)):
+        Abundances.append([])
+        Trans.append([])
+
+    for t in range(TT):
+        A0 = calc_rowwise_norm(A)
+        for i in range(len(I)):
+            # Give mean of relative abundance values of each microbe at time t
+            Abundances[i].append(np.mean(A0,axis=0)[i])
+            Trans[i].append(np.mean(T, axis=0)[i])
+
+        Env = update_env(Env, A, EU)
+        micR, hostR = find_R(I, A, RH, r, s)
+        A = update_microbes(A, micR, Env, c, K)
+        A, RH, T = update_host(A, hostR, RH, T, mu, d, seed)
+
+
+
+    return (Abundances, Trans)
+
+def run_schemeA_giveninit_track(I, RH, T, A, Env, Parameters):
+    d = Parameters['death_rate']
+    s = Parameters['host_weight']
+    mu = Parameters['mutation']
+
+    r = Parameters['mic_intR']
+    K = Parameters['mic_capacity']
+
+    c = Parameters['col_rate']
+    seed = Parameters['seed']
+    EU = Parameters['Env_update']
+
+    TT = Parameters['sim_time']
+
+    Abundances = []
+    Trans = []
+    for i in range(len(I)):
+        Abundances.append([])
+        Trans.append([])
+
+    for t in range(TT):
+        A0 = calc_rowwise_norm(A)
+        for i in range(len(I)):
+            # Give mean of relative abundance values of each microbe at time t
+            Abundances[i].append(A0[:,i])
+            Trans[i].append(np.mean(T, axis=0)[i])
+
+        Env = update_env(Env, A, EU)
+        micR, hostR = find_R(I, A, RH, r, s)
+        A = update_microbes(A, micR, Env, c, K)
+        A, RH, T = update_host(A, hostR, RH, T, mu, d, seed)
+
+
+
+    return (Abundances, Trans)
