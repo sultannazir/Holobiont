@@ -29,6 +29,15 @@ def find_R(I, A, RH, rM, s):
     hostR = R[:,-1]/np.clip(np.sum(R[:,-1]), a_min=0.0001, a_max=None)
     return(micR, hostR)
 
+def find_R_nohost(I, A, rM):
+    A0 = A/np.clip(np.sum(A), a_min=0.0001, a_max=None)
+    RM = np.matmul(A0,I)  # net microbe effect on fitness as per unit fitness effect (I) multiplied by abundance (A)
+    R = rM + RM  # net fitness as sum of host effect and microbe effect to intrinsic fitness
+    # extract and normalize microbe fitnesses in each host
+
+    micR = R/np.clip(np.sum(R), a_min=0.0001, a_max=None)
+    return(micR)
+
 def update_microbes(A, micR, Env, c, K):
 
     A0 = calc_rowwise_norm(A)
@@ -58,9 +67,10 @@ def update_microbes(A, micR, Env, c, K):
     return(A+Aadd)
 
 def update_microbes_new(A, micR, Env, c, K):
-    A0 = calc_rowwise_norm(A)
+    #A0 = calc_rowwise_norm(A)
+    A0 = A/np.clip(np.sum(A), a_min=0.0001, a_max=None)
     AR = np.multiply(A0, micR)  # net growth rate = abundance x net fitness
-    normAR = calc_rowwise_norm(AR)  # normalized growth rate
+    normAR = AR/np.clip(np.sum(AR), a_min=0.0001, a_max=None)  # normalized growth rate
 
     P1 = normAR  # probability of proliferation
     P2 = A / K  # probability of death
@@ -72,20 +82,19 @@ def update_microbes_new(A, micR, Env, c, K):
     PC = PB + P1*P3*(1-P2)*(1-P4)
     PD = PC + P2*P4*(1-P1)*(1-P3)
 
-    Probs = np.random.rand(A.shape[0], A.shape[1])
+    Probs = np.random.rand(len(A))
 
-    Aadd = np.zeros(A.shape)
+    Aadd = np.zeros(len(A))
 
-    for i in range(A.shape[0]):
-        for j in range(A.shape[1]):
-            if Probs[i, j] <= PA[i, j]:
-                Aadd[i, j] = +1
-            elif PA[i, j] < Probs[i, j] <= PB[i, j]:
-                Aadd[i, j] = -1
-            elif PB[i,j] < Probs[i,j] <= PC[i,j]:
-                Aadd[i,j] = +2
-            elif PC[i,j] < Probs[i,j] <= PD[i,j]:
-                Aadd[i,j] = -2
+    for i in range(len(A)):
+            if Probs[i] <= PA[i]:
+                Aadd[i] = +1
+            elif PA[i] < Probs[i] <= PB[i]:
+                Aadd[i] = -1
+            elif PB[i] < Probs[i] <= PC[i]:
+                Aadd[i] = +2
+            elif PC[i] < Probs[i] <= PD[i]:
+                Aadd[i] = -2
             else:
                 continue
 
