@@ -57,6 +57,39 @@ def update_microbes(A, micR, Env, c, K):
 
     return(A+Aadd)
 
+def update_microbes_new(A, micR, Env, c, K):
+    A0 = calc_rowwise_norm(A)
+    AR = np.multiply(A0, micR)  # net growth rate = abundance x net fitness
+    normAR = calc_rowwise_norm(AR)  # normalized growth rate
+
+    P1 = normAR  # probability of proliferation
+    P2 = A / K  # probability of death
+    P3 = c * Env  # probability of colonization
+    P4 = c * A/K   # probability of emigration
+
+    PA = (P1+P3)*(1 - P2)*(1 - P4) - P1*P3*(1 + 2*P2*P4 - 3*P2 - 3*P4)
+    PB = PA + (P2+P4)*(1 - P1)*(1 - P3) - P2*P4*(1 + 2*P1*P3 - 3*P1 - 3*P3)
+    PC = PB + P1*P3*(1-P2)*(1-P4)
+    PD = PC + P2*P4*(1-P1)*(1-P3)
+
+    Probs = np.random.rand(A.shape[0], A.shape[1])
+
+    Aadd = np.zeros(A.shape)
+
+    for i in range(A.shape[0]):
+        for j in range(A.shape[1]):
+            if Probs[i, j] <= PA[i, j]:
+                Aadd[i, j] = +1
+            elif PA[i, j] < Probs[i, j] <= PB[i, j]:
+                Aadd[i, j] = -1
+            elif PB[i,j] < Probs[i,j] <= PC[i,j]:
+                Aadd[i,j] = +2
+            elif PC[i,j] < Probs[i,j] <= PD[i,j]:
+                Aadd[i,j] = -2
+            else:
+                continue
+
+    return(A + Aadd)
 
 def update_env(Env, A, Env_upd):
     A0 = calc_rowwise_norm(A)    # average abundance of microbes in the host population
@@ -82,9 +115,9 @@ def update_host(A, R, RH, T, mu, d, seed):
         #IDdeath = np.random.choice(IDhost) # choose index of host which dies
 
         # update offspring host control values
-        RH[IDdeath] = np.clip(RH[IDbirth] + np.random.normal(0, 0, len(RH[0])), a_min=-1, a_max=1)
+        #RH[IDdeath] = np.clip(RH[IDbirth] + np.random.normal(0, 0, len(RH[0])), a_min=-1, a_max=1)
         # update offspring host-controlled transmission values
-        T[IDdeath] = np.clip(T[IDbirth] + np.random.normal(0, 0, len(RH[0])-1), a_min=-1, a_max=1)
+        #T[IDdeath] = np.clip(T[IDbirth] + np.random.normal(0, 0, len(RH[0])-1), a_min=-1, a_max=1)
 
         # initalize offspring microbiome
         randtrans = np.random.rand(len(A[0]))
@@ -206,7 +239,7 @@ def run_schemeA_frac_singlehost(I, RH, A, Env, Parameters):
         A0 = calc_rowwise_norm(A)
         Abundance.append(A0[0])
         micR, hostR = find_R(I, A, RH, r, s)
-        A = update_microbes(A, micR, Env, c, K)
+        A = update_microbes_new(A, micR, Env, c, K)
 
     return(Abundance)
 
@@ -239,7 +272,7 @@ def run_schemeA_giveninit_getmean(I, RH, T, A, Env, Parameters):
 
         Env = update_env(Env, A, EU)
         micR, hostR = find_R(I, A, RH, r, s)
-        A = update_microbes(A, micR, Env, c, K)
+        A = update_microbes_new(A, micR, Env, c, K)
         A, RH, T = update_host(A, hostR, RH, T, mu, d, seed)
 
 

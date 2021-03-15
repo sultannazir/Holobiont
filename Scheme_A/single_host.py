@@ -9,7 +9,7 @@ Parameters = {'Num_mic'     :2,     # number of microbes
               'host_weight' :0,     # host weightage in calculating fitness (1 - microbe weightage)
               'mic_intR'    :1,     # microbe intrinsic fitness
               'mic_capacity':1000,   # microbe carrying capacity
-              'col_rate'    :0.01,   # colonization rate
+              'seed'    :1 ,  # colonization rate
               'sim_time'    :500,  # number of time steps
               'num_sim'     :100    # number of simulations
               }
@@ -33,21 +33,23 @@ init_ab = [[0,0],[1,0],[0,1],[1,1]]
 
 # subplot spacing
 fig = plt.figure(figsize = (9,9))
-gs1 = gridspec.GridSpec(1, 4)
+gs1 = gridspec.GridSpec(3, 4)
 gs1.update(wspace=0.025, hspace=0.05)
 
 
-for n in range(4): # plot row
-    for m in range(1):  # plot column
+for n in range(3): # plot row
+    for m in range(3):  # plot column
+        I = np.array([[0, 0, 0],
+                      [0, -1, 1]])
         print(m,n)
-        A = np.array([init_ab[n]])*10**m              # initial abundance for plots in nth row
-        Parameters['col_rate'] = 0.1     # colonization rate for plots in mth column
+        A = np.array([init_ab[n]])            # initial abundance for plots in nth row
+        Parameters['col_rate'] = 10**(-m)     # colonization rate for plots in mth column
         AB = []
         for i in range(num):                    # rum simulation num times
             AB.append(gf.run_schemeA_frac_singlehost(I, RH, A, Env, Parameters))
             AB[i] = pd.DataFrame(AB[i], columns=list(str(i + 1) for i in range(N)))
 
-        plt.subplot(2,4,4*m+n+1)
+        plt.subplot(3,3,3*m+n+1)
         for i in range(num):
             for j in range(N):
                 plt.plot(AB[i][str(j+1)],color=color[j], alpha=5/num)
